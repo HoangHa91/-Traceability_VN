@@ -21,11 +21,31 @@ class EstablishmentCreate(BaseModel):
     name: str
     password: str
     province_code: Optional[str] = None
+    address: Optional[str] = None
+    contact_phone: Optional[str] = None
+    contact_email: Optional[str] = None
+    business_registration_cert_url: Optional[str] = None
+    food_safety_cert_url: Optional[str] = None
+
+class EstablishmentUpdate(BaseModel):
+    name: Optional[str] = None
+    province_code: Optional[str] = None
+    address: Optional[str] = None
+    contact_phone: Optional[str] = None
+    contact_email: Optional[str] = None
+    business_registration_cert_url: Optional[str] = None
+    food_safety_cert_url: Optional[str] = None
 
 class EstablishmentResponse(BaseModel):
     business_code: str
     name: str
     tier: str
+    province_code: Optional[str] = None
+    address: Optional[str] = None
+    contact_phone: Optional[str] = None
+    contact_email: Optional[str] = None
+    business_registration_cert_url: Optional[str] = None
+    food_safety_cert_url: Optional[str] = None
     model_config = {"from_attributes": True}
 
 # --- Products ---

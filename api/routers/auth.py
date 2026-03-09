@@ -96,3 +96,17 @@ def login_for_access_token(
 @router.get("/me", response_model=schemas.EstablishmentResponse)
 def read_users_me(current_est: Annotated[models.Establishment, Depends(get_current_establishment)]):
     return current_est
+
+@router.put("/me", response_model=schemas.EstablishmentResponse)
+def update_users_me(
+    update_data: schemas.EstablishmentUpdate,
+    current_est: Annotated[models.Establishment, Depends(get_current_establishment)],
+    db: Session = Depends(get_db)
+):
+    update_dict = update_data.model_dump(exclude_unset=True)
+    for key, value in update_dict.items():
+        setattr(current_est, key, value)
+    
+    db.commit()
+    db.refresh(current_est)
+    return current_est

@@ -14,6 +14,11 @@ class Establishment(Base):
     business_code = Column(String, unique=True, index=True, nullable=False) # MST
     name = Column(String, nullable=False)
     province_code = Column(String(2))
+    address = Column(String, nullable=True)
+    contact_phone = Column(String, nullable=True)
+    contact_email = Column(String, nullable=True)
+    business_registration_cert_url = Column(String, nullable=True)
+    food_safety_cert_url = Column(String, nullable=True)
     hashed_password = Column(String, nullable=False) # Added for SME web login MVP
     tier = Column(String, default="PORTAL") # PORTAL | API | SFTP
     is_active = Column(Boolean, default=True)

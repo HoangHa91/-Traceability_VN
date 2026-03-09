@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Package, Activity, LogOut } from 'lucide-react';
+import { LayoutDashboard, Package, Activity, LogOut, Building } from 'lucide-react';
 
 export const Sidebar: React.FC = () => {
   const navigate = useNavigate();
@@ -70,6 +70,20 @@ export const Sidebar: React.FC = () => {
           })}
         >
           <Activity size={20} /> Log Event
+        </NavLink>
+
+        <NavLink 
+          to="/profile" 
+          style={({ isActive }) => ({
+            display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', 
+            borderRadius: 'var(--radius-sm)', textDecoration: 'none',
+            color: isActive ? 'var(--primary)' : 'var(--text-muted)',
+            backgroundColor: isActive ? 'var(--primary-glow)' : 'transparent',
+            fontWeight: isActive ? 600 : 500,
+            transition: 'all var(--transition-fast)'
+          })}
+        >
+          <Building size={20} /> Company Profile
         </NavLink>
       </nav>
 

@@ -6,6 +6,7 @@ import { Dashboard } from './pages/Dashboard';
 import { Products } from './pages/Products';
 import { AddEvent } from './pages/AddEvent';
 import { AddProduct } from './pages/AddProduct';
+import { Profile } from './pages/Profile';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <div className="app-container">
@@ -72,6 +73,17 @@ function App() {
           <ProtectedRoute>
             <Layout>
               <AddEvent />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <Profile />
             </Layout>
           </ProtectedRoute>
         }
