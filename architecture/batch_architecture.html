@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MoIT – Kiến Trúc Batch Truy Xuất Nguồn Gốc</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface2: #1c2330;
+      --border: #30363d;
+      --accent: #58a6ff;
+      --accent2: #3fb950;
+      --accent3: #f78166;
+      --accent4: #d2a8ff;
+      --accent5: #ffa657;
+      --text: #c9d1d9;
+      --text-muted: #8b949e;
+      --glow: rgba(88,166,255,0.15);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 24px;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 40px;
+      padding: 32px;
+      background: linear-gradient(135deg, #1c2330 0%, #0d1117 100%);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+    header::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--accent4), var(--accent2));
+    }
+    header h1 { font-size: 1.8rem; color: var(--accent); margin-bottom: 8px; }
+    header p { color: var(--text-muted); font-size: 0.9rem; }
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin: 4px;
+    }
+    .badge-blue { background: rgba(88,166,255,0.15); color: var(--accent); border: 1px solid rgba(88,166,255,0.3); }
+    .badge-green { background: rgba(63,185,80,0.15); color: var(--accent2); border: 1px solid rgba(63,185,80,0.3); }
+    .badge-orange { background: rgba(255,166,87,0.15); color: var(--accent5); border: 1px solid rgba(255,166,87,0.3); }
+
+    .arch-container {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .layer {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      transition: box-shadow 0.3s ease;
+    }
+    .layer:hover { box-shadow: 0 0 30px var(--glow); }
+
+    .layer-header {
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      letter-spacing: 0.5px;
+    }
+    .layer-header .icon { font-size: 1.4rem; }
+    .layer-header .subtitle { font-size: 0.75rem; font-weight: 400; color: rgba(255,255,255,0.6); margin-left: auto; }
+
+    .layer-ingestion .layer-header { background: linear-gradient(90deg, rgba(88,166,255,0.2), rgba(88,166,255,0.05)); color: var(--accent); border-bottom: 1px solid rgba(88,166,255,0.2); }
+    .layer-processing .layer-header { background: linear-gradient(90deg, rgba(210,168,255,0.2), rgba(210,168,255,0.05)); color: var(--accent4); border-bottom: 1px solid rgba(210,168,255,0.2); }
+    .layer-storage .layer-header { background: linear-gradient(90deg, rgba(63,185,80,0.2), rgba(63,185,80,0.05)); color: var(--accent2); border-bottom: 1px solid rgba(63,185,80,0.2); }
+
+    .component-grid {
+      display: grid;
+      gap: 16px;
+      padding: 20px;
+      background: var(--surface);
+    }
+    .layer-ingestion .component-grid { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+    .layer-processing .component-grid { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+    .layer-storage .component-grid { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+
+    .component {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .component::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    }
+    .component:hover { transform: translateY(-3px); border-color: var(--accent); }
+
+    .comp-ingestion::before { background: var(--accent); }
+    .comp-processing::before { background: var(--accent4); }
+    .comp-storage-hot::before { background: var(--accent5); }
+    .comp-storage-cold::before { background: #6e7681; }
+    .comp-api::before { background: var(--accent2); }
+
+    .component h3 { font-size: 0.9rem; font-weight: 700; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+    .component p { font-size: 0.78rem; color: var(--text-muted); line-height: 1.5; }
+    .component ul { font-size: 0.78rem; color: var(--text-muted); padding-left: 16px; margin-top: 6px; }
+    .component ul li { margin-bottom: 3px; }
+    .tech-tag {
+      display: inline-block;
+      font-size: 0.68rem;
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-top: 10px;
+      background: rgba(255,255,255,0.07);
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+    }
+
+    /* Arrow between layers */
+    .layer-connector {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      padding: 4px 0;
+    }
+    .layer-connector::before,
+    .layer-connector::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border), transparent);
+    }
+    .arrow-down {
+      display: flex;
+      justify-content: center;
+      color: var(--text-muted);
+      font-size: 1.4rem;
+      margin: -6px 0;
+    }
+
+    /* Timeline section */
+    .timeline-section {
+      max-width: 1200px;
+      margin: 0 auto;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .timeline-header {
+      padding: 14px 20px;
+      background: linear-gradient(90deg, rgba(255,166,87,0.2), rgba(255,166,87,0.05));
+      color: var(--accent5);
+      font-weight: 700;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .timeline-body { background: var(--surface); padding: 24px; }
+    .timeline {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      overflow-x: auto;
+      padding-bottom: 8px;
+    }
+    .timeline-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 130px;
+    }
+    .timeline-time {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--accent5);
+      margin-bottom: 8px;
+    }
+    .timeline-dot {
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      border: 2px solid var(--accent5);
+      background: var(--accent5);
+      flex-shrink: 0;
+    }
+    .timeline-dot.active { background: var(--accent2); border-color: var(--accent2); box-shadow: 0 0 12px rgba(63,185,80,0.6); }
+    .timeline-line { flex: 1; height: 2px; background: linear-gradient(90deg, var(--accent5), var(--border)); min-width: 40px; }
+    .timeline-label {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      text-align: center;
+      margin-top: 8px;
+      max-width: 110px;
+      line-height: 1.4;
+    }
+
+    /* Stack grid */
+    .stack-section {
+      max-width: 1200px;
+      margin: 0 auto;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .stack-header {
+      padding: 14px 20px;
+      background: linear-gradient(90deg, rgba(63,185,80,0.15), rgba(63,185,80,0.03));
+      color: var(--accent2);
+      font-weight: 700;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .stack-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1px;
+      background: var(--border);
+    }
+    .stack-item {
+      background: var(--surface);
+      padding: 20px 16px;
+      text-align: center;
+      transition: background 0.2s;
+    }
+    .stack-item:hover { background: var(--surface2); }
+    .stack-item .tech { font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .stack-item .role { font-size: 0.72rem; color: var(--accent); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .stack-item .desc { font-size: 0.72rem; color: var(--text-muted); margin-top: 6px; line-height: 1.4; }
+
+    footer {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🏛️ MoIT — National Food Traceability Hub</h1>
+    <p>Hệ Thống Truy Xuất Nguồn Gốc Quốc Gia · Kiến Trúc Batch</p>
+    <div style="margin-top:12px">
+      <span class="badge badge-blue">⏱ SLA: 24 giờ</span>
+      <span class="badge badge-green">🗄 Lưu trữ: 5 năm</span>
+      <span class="badge badge-orange">🔗 One-Before / One-After</span>
+    </div>
+  </header>
+
+  <div class="arch-container">
+
+    <!-- INGESTION LAYER -->
+    <div class="layer layer-ingestion">
+      <div class="layer-header">
+        <span class="icon">📥</span>
+        <span>INGESTION LAYER</span>
+        <span style="color:inherit;font-weight:normal;font-size:0.8rem">— Lớp Thu Thập Dữ Liệu</span>
+        <span class="subtitle">Plug-and-Play · Deadline: 23:59 daily</span>
+      </div>
+      <div class="component-grid">
+        <div class="component comp-ingestion">
+          <h3>📁 SFTP / S3 File Drop</h3>
+          <p>Cho doanh nghiệp lớn và ERP truyền thống. Nộp tệp hàng ngày trước 23:59.</p>
+          <ul>
+            <li>CSV · XML · Excel (.xlsx)</li>
+            <li>Mã hóa TLS 1.3</li>
+            <li>Kiểm tra chữ ký số</li>
+          </ul>
+          <span class="tech-tag">SFTP + MinIO S3</span>
+        </div>
+        <div class="component comp-ingestion">
+          <h3>🔌 Bulk Upload API</h3>
+          <p>REST endpoint cho ERP hiện đại và hệ thống start-up.</p>
+          <ul>
+            <li>≤ 500 records / request</li>
+            <li>Idempotent POST</li>
+            <li>OAuth2 Bearer Token</li>
+          </ul>
+          <span class="tech-tag">FastAPI · JSON</span>
+        </div>
+        <div class="component comp-ingestion">
+          <h3>🖥️ Web Portal (Manual)</h3>
+          <p>UI đơn giản dành cho hộ kinh doanh và cơ sở nhỏ, không cần kỹ thuật.</p>
+          <ul>
+            <li>Form nhập tay responsive</li>
+            <li>Validation tức thì</li>
+            <li>Hỗ trợ tiếng Việt</li>
+          </ul>
+          <span class="tech-tag">HTML · FastAPI Backend</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow-down">↓ Raw Events → MinIO Staging Inbox ↓</div>
+
+    <!-- PROCESSING LAYER -->
+    <div class="layer layer-processing">
+      <div class="layer-header">
+        <span class="icon">⚙️</span>
+        <span>PROCESSING LAYER</span>
+        <span style="color:inherit;font-weight:normal;font-size:0.8rem">— Lớp Xử Lý</span>
+        <span class="subtitle">Airflow DAG · 00:00 – 06:00 daily</span>
+      </div>
+      <div class="component-grid">
+        <div class="component comp-processing">
+          <h3>✅ Validation Engine</h3>
+          <p>Kiểm tra schema và trường bắt buộc trước khi xử lý.</p>
+          <ul>
+            <li><b>product_id</b> — Mã sản phẩm</li>
+            <li><b>location_id</b> — Mã địa điểm</li>
+            <li><b>timestamp</b> — ISO 8601</li>
+            <li><b>lot_number</b> — Số lô hàng</li>
+          </ul>
+          <span class="tech-tag">Python · Pydantic · Pandas</span>
+        </div>
+        <div class="component comp-processing">
+          <h3>🔗 Traceability Linker</h3>
+          <p>Lắp ráp Mã Truy Xuất theo nguyên tắc One-Before / One-After.</p>
+          <ul>
+            <li>Nhà cung cấp → Sự kiện → Khách hàng</li>
+            <li>Tạo traceability_code duy nhất</li>
+            <li>Liên kết prev_event / next_event</li>
+          </ul>
+          <span class="tech-tag">Python · PostgreSQL</span>
+        </div>
+        <div class="component comp-processing">
+          <h3>🗂 Event Processor</h3>
+          <p>Ánh xạ sự kiện sang 3 loại truy xuất chuẩn.</p>
+          <ul>
+            <li>🔄 <b>State Change</b> — thay đổi trạng thái</li>
+            <li>📊 <b>Property Change</b> — thay đổi thuộc tính</li>
+            <li>🤝 <b>Ownership Change</b> — thay đổi quyền sở hữu</li>
+          </ul>
+          <span class="tech-tag">Python · SQLAlchemy</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow-down">↓ Validated Events → Dual Storage ↓</div>
+
+    <!-- STORAGE LAYER -->
+    <div class="layer layer-storage">
+      <div class="layer-header">
+        <span class="icon">🗄️</span>
+        <span>STORAGE & SERVING LAYER</span>
+        <span style="color:inherit;font-weight:normal;font-size:0.8rem">— Lưu Trữ & Phục Vụ</span>
+        <span class="subtitle">5-year retention · Read-only Public API</span>
+      </div>
+      <div class="component-grid">
+        <div class="component comp-storage-hot">
+          <h3>🔥 Hot Storage</h3>
+          <p>Dữ liệu 12 tháng gần nhất — tối ưu cho tra cứu thu hồi khẩn cấp.</p>
+          <ul>
+            <li>Indexed: product_id, lot_number</li>
+            <li>Query time &lt; 100ms</li>
+            <li>Audit log đầy đủ</li>
+          </ul>
+          <span class="tech-tag">PostgreSQL 16</span>
+        </div>
+        <div class="component comp-storage-cold">
+          <h3>❄️ Archive Storage (Cold Lake)</h3>
+          <p>Dữ liệu tháng 13–60. Lifecycle tự động, nén Parquet.</p>
+          <ul>
+            <li>Parquet + GZIP compression</li>
+            <li>Lifecycle: Hot → Cold @ 12 months</li>
+            <li>Delete @ 60 months</li>
+          </ul>
+          <span class="tech-tag">MinIO · Cloud Object Storage</span>
+        </div>
+        <div class="component comp-api">
+          <h3>🌐 Public API / Cổng Thông Tin</h3>
+          <p>Read-only replica. Người tiêu dùng tra cứu nguồn gốc sản phẩm miễn phí.</p>
+          <ul>
+            <li>GET /trace/{product_id}</li>
+            <li>GET /trace/qr/{qr_code}</li>
+            <li>Rate-limited · No auth required</li>
+          </ul>
+          <span class="tech-tag">FastAPI · Read Replica</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- TIMELINE -->
+  <div style="margin-top: 28px;">
+    <div class="timeline-section">
+      <div class="timeline-header">
+        <span>⏱️</span> Luồng 24 Giờ — Daily Batch Flow
+      </div>
+      <div class="timeline-body">
+        <div class="timeline">
+          <div class="timeline-step">
+            <div class="timeline-time">06:00 PM</div>
+            <div class="timeline-dot"></div>
+            <div class="timeline-label">Sự kiện xảy ra tại cơ sở</div>
+          </div>
+          <div class="timeline-line"></div>
+          <div class="timeline-step">
+            <div class="timeline-time">08:00 PM</div>
+            <div class="timeline-dot"></div>
+            <div class="timeline-label">Export CSV / Gọi API / Nhập Portal</div>
+          </div>
+          <div class="timeline-line"></div>
+          <div class="timeline-step">
+            <div class="timeline-time">11:59 PM</div>
+            <div class="timeline-dot"></div>
+            <div class="timeline-label">Cut-off — Hạn nộp dữ liệu</div>
+          </div>
+          <div class="timeline-line"></div>
+          <div class="timeline-step">
+            <div class="timeline-time">12:00 AM</div>
+            <div class="timeline-dot"></div>
+            <div class="timeline-label">Airflow DAG khởi động</div>
+          </div>
+          <div class="timeline-line"></div>
+          <div class="timeline-step">
+            <div class="timeline-time">06:00 AM</div>
+            <div class="timeline-dot active"></div>
+            <div class="timeline-label">✅ Dữ liệu sẵn sàng trên Public API</div>
+          </div>
+        </div>
+        <p style="text-align:center;margin-top:16px;font-size:0.8rem;color:var(--accent2);">
+          ✅ Tổng thời gian: &lt; 24 giờ — Đáp ứng ràng buộc MoIT
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- TECH STACK -->
+  <div style="margin-top: 28px;">
+    <div class="stack-section">
+      <div class="stack-header">
+        <span>🛠️</span> Technology Stack
+      </div>
+      <div class="stack-grid">
+        <div class="stack-item">
+          <div class="tech">Apache Airflow</div>
+          <div class="role">Orchestration</div>
+          <div class="desc">Lập lịch & giám sát batch jobs từ hàng nghìn nguồn</div>
+        </div>
+        <div class="stack-item">
+          <div class="tech">Pydantic + Pandas</div>
+          <div class="role">Validation</div>
+          <div class="desc">Làm sạch & validate CSV/Excel từ nhiều định dạng</div>
+        </div>
+        <div class="stack-item">
+          <div class="tech">PostgreSQL 16</div>
+          <div class="role">Primary DB</div>
+          <div class="desc">Audit logs, relational links, hot storage 12 months</div>
+        </div>
+        <div class="stack-item">
+          <div class="tech">MinIO / S3</div>
+          <div class="role">Cold Storage</div>
+          <div class="desc">Object storage tiết kiệm chi phí cho 5 năm lưu trữ</div>
+        </div>
+        <div class="stack-item">
+          <div class="tech">FastAPI</div>
+          <div class="role">API Layer</div>
+          <div class="desc">Bulk upload API + Public read-only consumer endpoint</div>
+        </div>
+        <div class="stack-item">
+          <div class="tech">OAuth2 + Chữ ký số</div>
+          <div class="role">Security</div>
+          <div class="desc">Xác thực pháp lý cơ sở nộp batch</div>
+        </div>
+        <div class="stack-item">
+          <div class="tech">Grafana</div>
+          <div class="role">Monitoring</div>
+          <div class="desc">Theo dõi SLA 24h, alert khi batch lỗi</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p>🏛️ Bộ Công Thương (MoIT) · Hệ Thống Truy Xuất Nguồn Gốc Quốc Gia · v1.0.0 · 2026-03-09</p>
+    <p style="margin-top:6px">Validated Data Lake · Batch Architecture · 24h SLA · 5-Year Retention</p>
+  </footer>
+</body>
+</html>
