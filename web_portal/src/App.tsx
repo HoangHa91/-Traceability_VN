@@ -5,6 +5,7 @@ import { Login } from './pages/Login';
 import { Dashboard } from './pages/Dashboard';
 import { Products } from './pages/Products';
 import { AddEvent } from './pages/AddEvent';
+import { AddProduct } from './pages/AddProduct';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <div className="app-container">
@@ -49,6 +50,17 @@ function App() {
           <ProtectedRoute>
             <Layout>
               <Products />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      
+      <Route
+        path="/add-product"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <AddProduct />
             </Layout>
           </ProtectedRoute>
         }

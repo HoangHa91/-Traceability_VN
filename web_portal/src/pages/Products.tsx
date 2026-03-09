@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { PackagePlus, Search } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export const Products: React.FC = () => {
+  const navigate = useNavigate();
   const [products, setProducts] = useState([
     { id: '1', code: 'PROD-CF-01', name: 'Cà phê Robusta (Hạt)', category: 'Nông sản' },
     { id: '2', code: 'PROD-CF-02', name: 'Cà phê Arabica (Hạt)', category: 'Nông sản' },
@@ -15,8 +17,8 @@ export const Products: React.FC = () => {
           <h1>Products Catalog</h1>
           <p>Register and manage your products for traceability</p>
         </div>
-        <button className="btn btn-primary">
-          <PackagePlus size={18} /> New Product
+        <button className="btn btn-primary" onClick={() => navigate('/add-product')}>
+          <PackagePlus size={18} /> Add Product
         </button>
       </header>
 

@@ -1,5 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
+from typing import List
+import csv
+from io import StringIO
 from typing import List
 
 from ..database import get_db
@@ -42,3 +46,58 @@ def read_products(
 ):
     products = db.query(models.Product).filter(models.Product.owner_id == current_est.id).offset(skip).limit(limit).all()
     return products
+
+@router.get("/template")
+def download_product_template():
+    content = "product_code,name,category\nPROD-001,Example Product,Ví dụ danh mục\n"
+    return StreamingResponse(
+        iter([content]),
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=product_template.csv"}
+    )
+
+@router.post("/bulk")
+async def upload_products_bulk(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_est: models.Establishment = Depends(get_current_establishment)
+):
+    if not file.filename.endswith('.csv'):
+        raise HTTPException(status_code=400, detail="Only CSV files are allowed")
+    
+    content = await file.read()
+    decoded = content.decode('utf-8')
+    csv_reader = csv.DictReader(StringIO(decoded))
+    
+    inserted = 0
+    errors = []
+    
+    for row_num, row in enumerate(csv_reader, start=2):
+        code = row.get('product_code', '').strip()
+        name = row.get('name', '').strip()
+        category = row.get('category', '').strip()
+        
+        if not code or not name:
+            errors.append(f"Row {row_num}: product_code and name are required")
+            continue
+            
+        exists = db.query(models.Product).filter(
+            models.Product.owner_id == current_est.id,
+            models.Product.product_code == code
+        ).first()
+        
+        if exists:
+            errors.append(f"Row {row_num}: product_code {code} already exists")
+            continue
+            
+        db_item = models.Product(
+            product_code=code,
+            name=name,
+            category=category,
+            owner_id=current_est.id
+        )
+        db.add(db_item)
+        inserted += 1
+        
+    db.commit()
+    return {"message": f"Successfully imported {inserted} products", "errors": errors}
