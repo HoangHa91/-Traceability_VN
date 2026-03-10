@@ -79,7 +79,7 @@ Thiết kế theo nguyên tắc **Plug-and-Play**: mỗi cơ sở kinh doanh có
 |---|---|---|---|
 | **SFTP / S3 File Drop** | Doanh nghiệp lớn, ERP cũ | CSV, XML, Excel (.xlsx) | Upload trước 23:00 hàng ngày |
 | **Bulk Upload API** | ERP hiện đại, startups | JSON batch (≤500 records/req) | REST POST, idempotent |
-| **Web Portal (Manual)** | Cơ sở nhỏ, hộ kinh doanh | Form nhập tay | UI đơn giản, responsive |
+| **Web Portal (React SPA)** | Cơ sở nhỏ, hộ kinh doanh | UI nhập tay & Quản lý hồ sơ | Dashboard, Web Form, Legal Profile |
 
 **Trường bắt buộc (Mandatory Fields) cho mọi sự kiện:**
 - `product_id` — Mã sản phẩm
@@ -235,10 +235,11 @@ Traceability_VN/
 ├── architecture/
 │   ├── batch_architecture.html   # Sơ đồ kiến trúc tương tác
 │   └── data_model.drawio         # Mô hình dữ liệu
+├── web_portal/                   # React Frontend (SME Portal)
+│   └── src/pages/                # Profile (Legal Info), Dashboard, AddEvent, vv.
 ├── ingestion/
 │   ├── sftp_watcher/             # Watch & ingest SFTP drops
-│   ├── bulk_api/                 # FastAPI bulk upload endpoint
-│   └── web_portal/               # Simple manual entry UI
+│   └── bulk_api/                 # FastAPI bulk upload endpoint
 ├── processing/
 │   ├── validation/               # Pydantic schemas + Pandas cleaning
 │   ├── linker/                   # Traceability code assembly
@@ -248,6 +249,7 @@ Traceability_VN/
 │   ├── hot/                      # PostgreSQL models
 │   └── cold/                     # MinIO lifecycle policies
 ├── api/
+│   ├── routers/                  # API routes (auth, products, events)
 │   └── public/                   # Read-only consumer API
 ├── orchestration/
 │   └── dags/                     # Apache Airflow DAGs

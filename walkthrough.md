@@ -1,7 +1,7 @@
 # Walkthrough: MoIT Batch Architecture Deliverables
 
 ## Summary
-Built a complete project scaffold and documentation suite for the **MoIT National Food Traceability Hub** using a batch-based "Validated Data Lake" architecture, ready for implementation.
+Built a complete project scaffold, documentation suite, and a functional React UI portal for the **MoIT National Food Traceability Hub** using a batch-based "Validated Data Lake" architecture, ready for implementation.
 
 ---
 
@@ -84,6 +84,14 @@ graph LR
 | `quarantined_records` | Invalid records awaiting correction |
 | `mv_public_trace_lookup` | Consumer-facing materialized view |
 | `set_updated_at()` trigger | Auto-maintain `updated_at` timestamps |
+
+---
+
+### 6. Company Profile & Legal Information Feature
+[Profile.tsx](file:///d:/09_Workspace/Traceability_VN/web_portal/src/pages/Profile.tsx)
+
+- **Frontend (`web_portal`)**: Implemented a dedicated React page allowing SMEs to manage their legal details (Tax Code, Business Name, Address) and upload official verification certificates.
+- **Backend API (`api`)**: Extended the authentication and establishment models to accept, store, and serve company profile data, ensuring robust compliance and data governance capabilities.
 
 ---
 
